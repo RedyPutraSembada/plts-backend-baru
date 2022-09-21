@@ -1,0 +1,60 @@
+image: unpamofficial/ci:envoy
+
+variables:
+  RELEASE_DIR: /plts
+
+deploy_dev:
+  stage: deploy
+  only:
+    - dev
+  script:
+    - mkdir -p ~/.ssh && eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - echo -e "$DEV_KEY" >> ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "$DEV_PUB" >> ~/.ssh/id_rsa.pub && chmod 600 ~/.ssh/id_rsa.pub
+    - >
+      if [ ! -z "$SERVER_INSTALL" ]; then
+        export IP_DEV="$SERVER_INSTALL"
+        sshpass -p "$SERVER_PASSWORD" ssh-copy-id "root@$IP_DEV"
+        ssh "root@$IP_DEV" "which docker || curl -s http://gitlab.unpam.ac.id/itcenter/bash/raw/master/centos7/docker-install.sh | bash"
+        ssh root@$IP_DEV "ls $RELEASE_DIR || git clone --branch $CI_COMMIT_BRANCH http://gitlab-ci-token:$ITCENTER_ACCESS_TOKEN@gitlab.unpam.ac.id/pinter/plts-backend.git $RELEASE_DIR"
+      fi
+    - echo "$LARAVEL_ENV_DEV" | ssh root@$IP_DEV "cat > $RELEASE_DIR/.env"
+    - >
+      ssh root@$IP_DEV "
+        cd $RELEASE_DIR
+        git reset --hard
+        git pull --no-rebase
+        docker-compose up -d --force-recreate
+        docker-compose exec -T laravel bash -c 'composer install && php artisan migrate && php artisan storage:link'
+      "
+
+deploy_prod:
+  stage: deploy
+  only:
+    - master
+  script:
+    - mkdir -p ~/.ssh && eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - echo -e "$DEPLOY_KEY" >> ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "$DEPLOY_PUB" >> ~/.ssh/id_rsa.pub && chmod 600 ~/.ssh/id_rsa.pub
+    - >
+      if [ ! -z "$SERVER_INSTALL" ]; then
+        export IP_PROD="$SERVER_INSTALL"
+        sshpass -p "$SERVER_PASSWORD" ssh-copy-id "root@$IP_PROD"
+        ssh "root@$IP_PROD" "which docker || curl -s http://gitlab.unpam.ac.id/itcenter/bash/raw/master/centos7/docker-install.sh | bash"
+        ssh root@$IP_PROD "ls $RELEASE_DIR || git clone --branch $CI_COMMIT_BRANCH http://gitlab-ci-token:$ITCENTER_ACCESS_TOKEN@gitlab.unpam.ac.id/pinter/plts-backend.git $RELEASE_DIR"
+      fi
+    - echo "$KEY_PUBLIC_MYUNPAM_PROD" | ssh root@$IP_PROD "cat > $RELEASE_DIR/laravel/secret/key_public_myunpam_prod"
+    - echo "$LARAVEL_ENV_PROD" | ssh root@$IP_PROD "cat > $RELEASE_DIR/laravel/.env"
+    - >
+      ssh root@$IP_PROD "
+        cd $RELEASE_DIR
+        git reset --hard
+        git pull --no-rebase
+        docker-compose -f docker-compose.yml -f docker-prod.yml up -d --force-recreate
+        docker-compose exec -T webserver bash -c 'composer install && php artisan migrate && php artisan storage:link'
+        docker run --rm -t -w /app/vue \
+          -v $RELEASE_DIR:/app \
+          node:12 bash -c 'npm install && cp -f src/example.env.js src/env.js && npm run build'
+      "
