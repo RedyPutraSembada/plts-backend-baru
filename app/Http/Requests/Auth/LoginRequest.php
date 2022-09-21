@@ -45,30 +45,6 @@ class LoginRequest extends FormRequest
      */
     public function authenticate()
     {
-        // $logins = Login::where('email', $this->login)->orWhere('username', $this->login)->first();
-        // $logins1 = Login::where('email', $this->logins)->get();
-        // $logins2 = Login::where('username', $this->logins)->get();
-        // $this->ensureIsNotRateLimited();
-
-        // if (!$logins1 || !Hash::check($this->password, $logins1->password)) {
-        //     // return redirect('/dashboard');
-        //     RateLimiter::hit($this->throttleKey());
-
-        //     throw ValidationException::withMessages([
-        //         'logins' => __(key: 'auth.failed'),
-        //     ]);
-        // }
-
-        // if (!$logins2 || !Hash::check($this->password, $logins2->password)) {
-        //     // return redirect('/dashboard');
-        //     RateLimiter::hit($this->throttleKey());
-
-        //     throw ValidationException::withMessages([
-        //         'logins' => __(key: 'auth.failed'),
-        //     ]);
-        // }
-
-        // RateLimiter::clear($this->throttleKey());
 
         $this->ensureIsNotRateLimited();
 
@@ -84,13 +60,6 @@ class LoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Ensure the login request is not rate limited.
-     *
-     * @return void
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function ensureIsNotRateLimited()
     {
         if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -109,11 +78,6 @@ class LoginRequest extends FormRequest
         ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     *
-     * @return string
-     */
     public function throttleKey()
     {
         return Str::lower($this->input('email')) . '|' . $this->ip();
