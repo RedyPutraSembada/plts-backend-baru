@@ -5,14 +5,15 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Login;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $user = Login::where('email', $request->email)->first();
+        $user = Login::where('email', $request->login)->orWhere('username', $request->login)->first();
 
-        if(!$user || !\Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);
@@ -32,8 +33,8 @@ class AuthController extends Controller
             'token' => $token
         ];
 
-        if($response)
-            return ResponseFormatter::success($response,'You have successfully getting user data');
+        if ($response)
+            return ResponseFormatter::success($response, 'You have successfully getting user data');
         else
             return ResponseFormatter::error('No data available in user', 'User data not found', 404);
     }

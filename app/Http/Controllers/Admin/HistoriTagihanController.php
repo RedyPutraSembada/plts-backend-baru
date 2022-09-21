@@ -94,6 +94,7 @@ class HistoriTagihanController extends Controller
         if ($histori->master_status_id == 1) {
             $stsPembayaran['master_status_id'] = 3;
             $status_pembayaran['master_status_id'] = 3;
+            $status_pembayaran['tgl_terima'] = Carbon::now()->format('Y-m-d');
             $pembayaran->update($status_pembayaran);
             $histori->update($stsPembayaran);
             Alert::toast('Status Pembayaran Menjadi Terbayar!', 'success');
@@ -102,6 +103,7 @@ class HistoriTagihanController extends Controller
             $stsPembayaran['master_status_id'] = 1;
             $histori->update($stsPembayaran);
             $status_pembayaran['master_status_id'] = 1;
+            $status_pembayaran['tgl_terima'] = null;
             $pembayaran->update($status_pembayaran);
             Alert::toast('Status Pembayaran Menjadi Belum Terbayar!', 'success');
             return redirect(route('historiTagihan'));

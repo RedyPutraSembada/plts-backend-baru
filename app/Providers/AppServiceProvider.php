@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        if(in_array(env('APP_ENV'), ['dev','prod'])){
+        if (in_array(env('APP_ENV'), ['dev', 'prod'])) {
             \URL::forceScheme('https');
         }
     }
@@ -27,16 +27,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Gate::define('admin', function(Login $login) {
+        Gate::define('admin', function (Login $login) {
             return $login->roles == "admin";
         });
 
-        Gate::define('operator', function(Login $login) {
+        Gate::define('operator', function (Login $login) {
             return $login->roles == "operator";
         });
 
-        Gate::define('plts', function(Login $login) {
+        Gate::define('plts', function (Login $login) {
             return $login->roles == "plts";
+        });
+
+        Gate::define('bpr', function (Login $login) {
+            return $login->roles == "bpr";
         });
     }
 }

@@ -116,14 +116,8 @@
                                                             {{-- <a href="{{ route('tagihan-StatusPembayaran', $tagihan->id) }}" id="btn-belum-terbayar" class="btn-sm badge-danger" style="font-size: 14px; border-radius:10px;">Belum Terbayar</a> --}}
                                                         </form>
                                                     @elseif ($tagihan->master_status_id == 3)
-                                                        <form action="{{ route('tagihan-StatusPembayaran', $tagihan->id) }}"
-                                                            method="post">
-                                                            @csrf
-                                                            <button class="btn btn-success mb-2" id="pembayaran"
-                                                                onclick="confirm('Apakah yakin tagihan ini belum terbayar?')"
-                                                                style="border-radius: 10px;">Terbayar</button>
-                                                            {{-- <a href="{{ route('tagihan-StatusPembayaran', $tagihan->id) }}" id="btn-terbayar" class="btn-sm badge-success" style="font-size: 14px; border-radius:10px;">Terbayar</a> --}}
-                                                        </form>
+                                                        <button class="btn btn-success mb-2" id="pembayaran"
+                                                            style="border-radius: 10px;">Terbayar</button>
                                                     @endif
                                                 </td>
                                             @endcan
